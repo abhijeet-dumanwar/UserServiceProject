@@ -3,8 +3,13 @@ package com.scaler.controllers;
 import com.scaler.DTOs.LoginRequestDTO;
 import com.scaler.DTOs.LogoutRequestDTO;
 import com.scaler.DTOs.SignUpRequestDTO;
+import com.scaler.Exceptions.TokenNotExistsOrAlreadyExpiredException;
+import com.scaler.models.Token;
 import com.scaler.models.User;
 import com.scaler.services.UserService;
+import lombok.NonNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping("/users/login")
-    public User login(@RequestBody LoginRequestDTO loginRequestDTO) {
+    public Token login(@RequestBody LoginRequestDTO loginRequestDTO) {
         // check if email and password in db
         // if yes return user
         // else throw some error
@@ -42,10 +47,16 @@ public class UserController {
     }
 
     @PostMapping("/users/logout")
-    public Boolean logout(@RequestBody LogoutRequestDTO logoutRequestDTO) {
+    public ResponseEntity<Void> logout(@RequestBody LogoutRequestDTO logoutRequestDTO) throws TokenNotExistsOrAlreadyExpiredException {
         // delete token if exists -> 200
         // if doesn't exist give a 404
 
-        return userService.Logout(logoutRequestDTO.getToken());
+        userService.Logout(logoutRequestDTO.getToken());
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/validate/{token}")
+    public User ValidateToken(@PathVariable("token") @NonNull String token) throws TokenNotExistsOrAlreadyExpiredException{
+        return userService.ValidateToken(token);
     }
 }
